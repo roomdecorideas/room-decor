@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', function() {
-
     // --- Pengaturan Feed ---
     const FILENAME = 'feed.xml';
 
@@ -12,11 +11,36 @@ document.addEventListener('DOMContentLoaded', function() {
     const endDateInput = document.getElementById('end-date');
 
     // --- Fungsi Bantuan ---
-    function capitalizeEachWord(str) { if (!str) return ''; return str.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '); }
-    function generateSeoTitle(baseKeyword) { const hookWords = ['Best', 'Amazing', 'Cool', 'Inspiring', 'Creative', 'Awesome', 'Stunning', 'Beautiful', 'Unique', 'Ideas', 'Inspiration', 'Designs']; const randomHook = hookWords[Math.floor(Math.random() * hookWords.length)]; const randomNumber = Math.floor(Math.random() * (200 - 55 + 1)) + 55; const capitalizedKeyword = capitalizeEachWord(baseKeyword); return `${randomNumber} ${randomHook} ${capitalizedKeyword}`; }
+    function capitalizeEachWord(str) { 
+        if (!str) return ''; 
+        return str.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '); 
+    }
+    
+    function generateSeoTitle(baseKeyword) { 
+        const hookWords = ['Best', 'Amazing', 'Cool', 'Inspiring', 'Creative', 'Awesome', 'Stunning', 'Beautiful', 'Unique', 'Ideas', 'Inspiration', 'Designs']; 
+        const randomHook = hookWords[Math.floor(Math.random() * hookWords.length)]; 
+        const randomNumber = Math.floor(Math.random() * (200 - 55 + 1)) + 55; 
+        const capitalizedKeyword = capitalizeEachWord(baseKeyword); 
+        return `${randomNumber} ${randomHook} ${capitalizedKeyword}`; 
+    }
+
+    // BARU: Fungsi untuk escape karakter XML
+    function escapeXml(unsafe) {
+        if (!unsafe) return '';
+        return unsafe.replace(/[<>&'"]/g, function (c) {
+            switch (c) {
+                case '<': return '&lt;';
+                case '>': return '&gt;';
+                case '&': return '&amp;';
+                case '"': return '&quot;';
+                case "'": return '&apos;';
+                default: return c;
+            }
+        });
+    }
 
     /**
-     * ▼▼▼ FUNGSI BARU: Menghasilkan Feed RSS 2.0 dengan Distribusi Tanggal ▼▼▼
+     * Menghasilkan Feed RSS 2.0 dengan Distribusi Tanggal
      * @param {Array<string>} keywordList - Daftar keyword terpilih.
      * @param {string} siteUrl - URL dasar website.
      * @param {Date} startDate - Tanggal mulai untuk publikasi.
@@ -48,15 +72,22 @@ document.addEventListener('DOMContentLoaded', function() {
             const title = generateSeoTitle(keyword);
             const keywordForUrl = keyword.replace(/\s/g, '-').toLowerCase();
             const articleUrl = `${siteUrl}/detail.html?q=${encodeURIComponent(keywordForUrl)}`;
-            const imageUrl = `https://tse1.mm.bing.net/th?q=${encodeURIComponent(keyword)}`;
+            
+            // BARU: Escape karakter XML di URL gambar
+            const imageUrl = `https://tse1.mm.bing.net/th?q=${encodeURIComponent(keyword)}&amp;w=400&amp;h=600&amp;c=7&amp;rs=1&amp;p=0&amp;dpr=1.5&amp;pid=1.7`;
+            
             const capitalizedKeyword = capitalizeEachWord(keyword);
             const hashtag = capitalizedKeyword.replace(/\s/g, '');
             const description = `Craving new ideas for ${capitalizedKeyword}? Discover amazing concepts and stunning visuals. Click to get the full inspiration now! #${hashtag} #HomeDecor #DesignIdeas`;
 
+            // BARU: Escape karakter XML di judul dan deskripsi
+            const escapedTitle = escapeXml(title);
+            const escapedDescription = escapeXml(description);
+
             xml += `    <item>\n`;
-            xml += `        <title>${title}</title>\n`;
+            xml += `        <title>${escapedTitle}</title>\n`;
             xml += `        <link>${articleUrl}</link>\n`;
-            xml += `        <description>${description}</description>\n`;
+            xml += `        <description>${escapedDescription}</description>\n`;
             xml += `        <pubDate>${pubDate}</pubDate>\n`;
             xml += `        <enclosure url="${imageUrl}" type="image/jpeg" />\n`;
             xml += `    </item>\n`;
